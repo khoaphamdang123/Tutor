@@ -1,0 +1,76 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+*.log
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Ll]og/
+[Ll]ogs/
+*.userosscache
+*.sln.docstates
+.vs/
+*.userprefs
+[Kk]ey.snk
+[Tt]est[Rr]esult*/
+
+# .NET Core / ASP.NET
+Properties/launchSettings.json
+appsettings.*.json
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+.nuget/
+.pnp
+.pnp.js
+*.env
+*.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.yarn/
+.pnp.zip
+
+# Build results
+[Dd]ocs*/tools/
+*.rsult
+BenchmarkDotNet.Artifacts/
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+*.resharper
+
+# Visual Studio / VS Code
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# SQL
+*.bak
+*.sql.bak
+
+# Logs
+logs/
+*.log
