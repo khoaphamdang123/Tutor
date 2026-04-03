@@ -63,7 +63,7 @@ public class PaymentService : IPaymentService
             booking.BookingTutor.OwnerUser.Id,
             "Thanh toán thành công",
             $"Học sinh đã thanh toán {amount:N0}₫ cho lịch dạy {booking.BookingSubject.Name}.",
-            "Success",
+            "Payment",
             new { payment.Id });
 
         return MapToDto(payment);
@@ -133,7 +133,7 @@ public class PaymentService : IPaymentService
             enrollment.OpenClass.ClassTutor.OwnerUser.Id,
             "Thanh toán thành công",
             $"Học sinh đã thanh toán {amount:N0}₫ cho lớp \"{enrollment.OpenClass.Title}\".",
-            "Success",
+            "Payment",
             new { payment.Id });
 
         return MapToDto(payment);

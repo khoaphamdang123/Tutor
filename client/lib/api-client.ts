@@ -40,6 +40,7 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${tokens.accessToken}`;
   }
   return config;
+
 });
 
 api.interceptors.response.use(

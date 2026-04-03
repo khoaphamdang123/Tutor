@@ -96,6 +96,7 @@ public class OpenClassesController : ControllerBase
         {
             var adminId = GetUserId();
             if (adminId is null) return Unauthorized();
+            Console.WriteLine($"Admin ID: {adminId.Value}");
             var ok = await _svc.PublishAsync(id, adminId.Value);
             if (!ok) return NotFound(new ApiResponse<object>(false, "Class not found.", null));
             return Ok(new ApiResponse<object>(true, "Class published.", null));

@@ -234,15 +234,18 @@ public class OpenClassService : IOpenClassService
         if (oc.AdminId != adminId) throw new UnauthorizedAccessException("Not authorized.");
 
         oc.IsPublished = true;
+        
         oc.Status = "Active";
+        
         oc.UpdatedAt = DateTime.UtcNow;
+        
         await _db.SaveChangesAsync();
 
         await _notifications.CreateNotificationAsync(
             oc.ClassTutor.OwnerUser.Id,
             "Lớp học mới được giao",
             $"Lớp \"{oc.Title}\" đã được phát hành và sẵn sàng nhận học sinh.",
-            "Info",
+            "OpenClass",
             new { oc.Id });
 
         return true;
@@ -266,7 +269,6 @@ public class OpenClassService : IOpenClassService
         var oc = await _db.OpenClasses.FindAsync(classId);
         if (oc is null) return false;
         if (oc.AdminId != adminId) throw new UnauthorizedAccessException("Not authorized.");
-
         oc.IsPublished = false;
         oc.Status = "Cancelled";
         oc.UpdatedAt = DateTime.UtcNow;
@@ -282,7 +284,7 @@ public class OpenClassService : IOpenClassService
                 enrollment.StudentId,
                 "Lớp học bị hủy",
                 $"Lớp \"{oc.Title}\" đã bị hủy bởi quản trị viên.",
-                "Warning",
+                "OpenClass",
                 new { oc.Id });
         }
 
@@ -309,7 +311,7 @@ public class OpenClassService : IOpenClassService
                 enrollment.StudentId,
                 "Lớp học đã hoàn thành",
                 $"Lớp \"{oc.Title}\" đã hoàn thành. Cảm ơn bạn đã tham gia!",
-                "Success",
+                "OpenClass",
                 new { oc.Id });
         }
 
@@ -369,7 +371,7 @@ public class OpenClassService : IOpenClassService
             oc.ClassTutor.OwnerUser.Id,
             "Đơn đăng ký mới",
             $"Học sinh {user.FullName} muốn tham gia lớp \"{oc.Title}\".",
-            "Info",
+            "Enrollment",
             new { enrollment.Id, classId = oc.Id });
 
         return MapToEnrollmentDto(enrollment, oc, user);
@@ -447,7 +449,7 @@ public class OpenClassService : IOpenClassService
             enrollment.StudentId,
             "Đơn đăng ký được chấp nhận",
             $"Bạn đã được nhận vào lớp \"{oc.Title}\". Vui lòng thanh toán để tham gia.",
-            "Success",
+            "Enrollment",
             new { enrollment.Id, classId = oc.Id });
 
         return MapToEnrollmentDto(enrollment, oc, enrollment.EnrolledStudent);
@@ -480,7 +482,7 @@ public class OpenClassService : IOpenClassService
             enrollment.StudentId,
             "Đơn đăng ký bị từ chối",
             $"Đơn đăng ký lớp \"{oc.Title}\" đã bị từ chối.",
-            "Warning",
+            "Enrollment",
             new { enrollment.Id, classId = oc.Id });
 
         return MapToEnrollmentDto(enrollment, oc, enrollment.EnrolledStudent);
@@ -722,7 +724,7 @@ public class OpenClassService : IOpenClassService
                 admin.Id,
                 "Yêu cầu hoàn tiền mới",
                 $"Học sinh {enrollment.EnrolledStudent.FullName} yêu cầu hoàn {refund.Amount:N0}₫ cho lớp \"{enrollment.OpenClass.Title}\".",
-                "Warning",
+                "Refund",
                 new { refund.Id });
         }
 
@@ -777,7 +779,7 @@ public class OpenClassService : IOpenClassService
                 refund.StudentId,
                 "Yêu cầu hoàn tiền được chấp nhận",
                 $"Yêu cầu hoàn {refund.Amount:N0}₫ cho lớp \"{enrollment.OpenClass.Title}\" đã được chấp nhận.",
-                "Success",
+                "Refund",
                 new { refund.Id });
         }
         else
@@ -786,7 +788,7 @@ public class OpenClassService : IOpenClassService
                 refund.StudentId,
                 "Yêu cầu hoàn tiền bị từ chối",
                 $"Yêu cầu hoàn tiền cho lớp \"{refund.Enrollment.OpenClass.Title}\" đã bị từ chối.",
-                "Warning",
+                "Refund",
                 new { refund.Id });
         }
 

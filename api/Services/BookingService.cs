@@ -91,7 +91,7 @@ public class BookingService : IBookingService
             tutor.OwnerUser.Id,
             "Yêu cầu đặt lịch mới",
             $"{student.FullName} muốn đặt lịch dạy {subject.Name} vào {request.StartTime:g}.",
-            "Info",
+            "Booking",
             new { booking.Id });
 
         return MapToDto(booking, student, tutor.OwnerUser, subject.Name, className);
@@ -232,7 +232,7 @@ public class BookingService : IBookingService
             notifyUserId,
             "Cập nhật đặt lịch",
             $"Lịch dạy {booking.BookingSubject.Name} {statusText}.",
-            "Info",
+            "Booking",
             new { booking.Id });
 
         return MapToDto(booking, booking.BookingStudent, booking.BookingTutor.OwnerUser,
