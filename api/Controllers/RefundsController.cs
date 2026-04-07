@@ -24,9 +24,11 @@ public class RefundsController : ControllerBase
             var studentId = GetUserId();
             if (studentId is null) return Unauthorized();
             var dto = await _svc.CreateRefundRequestAsync(studentId.Value, enrollmentId, request);
-            return Ok(new ApiResponse<RefundRequestDto>(true, "Refund request submitted.", dto));
+            return Ok(new ApiResponse<RefundRequestDto>(true, "Refund request submitted.", dto));        
         }
+        
         catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+        
         catch (InvalidOperationException ex) { return Conflict(new ApiResponse<object>(false, ex.Message, null)); }
     }
 

@@ -20,7 +20,7 @@ public class AuthController : ControllerBase
         try
         {
             var result = await _auth.RegisterAsync(request);
-            return Ok(new ApiResponse<AuthResponse>(true, "Registration successful.", result));
+            return Ok(new ApiResponse<RegisterResponse>(true, result.Message, result));
         }
         catch (InvalidOperationException ex)
         {
@@ -40,8 +40,11 @@ public class AuthController : ControllerBase
             var result = await _auth.LoginAsync(request);
             return Ok(new ApiResponse<AuthResponse>(true, "Login successful.", result));
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException ex)
         {
+            // Check if it's an email verification error
+            if (ex.Message.Contains("verify your email"))
+                return Unauthorized(new ApiResponse<object>(false, ex.Message, null));
             return Unauthorized(new ApiResponse<object>(false, "Invalid email or password.", null));
         }
     }
@@ -105,6 +108,38 @@ public class AuthController : ControllerBase
             return Ok(new ApiResponse<object>(true, "Password has been reset successfully. You can now log in.", null));
         }
         catch (UnauthorizedAccessException ex)
+        {
+            return BadRequest(new ApiResponse<object>(false, ex.Message, null));
+        }
+    }
+
+    [HttpGet("verify-email")]
+    public async Task<IActionResult> VerifyEmail([FromQuery] string token)
+    {
+        try
+        {
+            await _auth.VerifyEmailAsync(token);
+            return Ok(new ApiResponse<object>(true, "Email verified successfully. You can now log in.", null));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return BadRequest(new ApiResponse<object>(false, ex.Message, null));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new ApiResponse<object>(false, ex.Message, null));
+        }
+    }
+
+    [HttpPost("resend-verification")]
+    public async Task<IActionResult> ResendVerification([FromBody] ResendVerificationRequest request)
+    {
+        try
+        {
+            await _auth.ResendVerificationEmailAsync(request.Email);
+            return Ok(new ApiResponse<object>(true, "Verification email has been sent. Please check your inbox.", null));
+        }
+        catch (InvalidOperationException ex)
         {
             return BadRequest(new ApiResponse<object>(false, ex.Message, null));
         }

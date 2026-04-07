@@ -39,6 +39,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 // ─── Services (DI) ─────────────────────────────────────────────────────────
+builder.Services.AddSingleton<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITutorService, TutorService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
@@ -48,6 +49,7 @@ builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IOpenClassService, OpenClassService>();
 builder.Services.AddScoped<IPublicPricingService, PublicPricingService>();
+builder.Services.AddScoped<IStaticPageService, StaticPageService>();
 
 // ─── Controllers & Swagger ──────────────────────────────────────────────────
 builder.Services.AddControllers()
@@ -115,6 +117,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowFrontend");
+
+// Serve uploaded files (stored in wwwroot/uploads/)
+app.UseStaticFiles();
 
 app.UseAuthentication();
 

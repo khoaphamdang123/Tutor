@@ -26,6 +26,7 @@ public class AppDbContext : DbContext
     public DbSet<RefundRequest> RefundRequests => Set<RefundRequest>();
     public DbSet<PublicPricingCard> PublicPricingCards => Set<PublicPricingCard>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+    public DbSet<StaticPage> StaticPages => Set<StaticPage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -276,6 +277,24 @@ public class AppDbContext : DbContext
 
             entity.HasIndex(e => e.Token);
             entity.HasIndex(e => e.UserId);
+        });
+
+        // ─── StaticPage ──────────────────────────────────────────────────────
+        modelBuilder.Entity<StaticPage>(entity =>
+        {
+            entity.HasOne(e => e.Author)
+                  .WithMany()
+                  .HasForeignKey(e => e.AuthorId);
+
+            entity.HasIndex(e => e.Slug).IsUnique();
+            entity.HasIndex(e => e.Category);
+            entity.HasIndex(e => e.IsPublished);
+            entity.HasIndex(e => e.IsFeatured);
+            entity.HasIndex(e => e.SortOrder);
+
+            entity.Property(e => e.IsPublished).HasDefaultValue(true);
+            entity.Property(e => e.IsFeatured).HasDefaultValue(false);
+            entity.Property(e => e.SortOrder).HasDefaultValue(0);
         });
     }
 }

@@ -15,17 +15,19 @@ public class AuthService : IAuthService
 {
     private readonly AppDbContext _db;
     private readonly IConfiguration _config;
+    private readonly IEmailService _emailService;
 
     private int RefreshTokenExpiryDays =>
         int.TryParse(_config["Jwt:RefreshExpiryDays"], out var d) ? d : 30;
 
-    public AuthService(AppDbContext db, IConfiguration config)
+    public AuthService(AppDbContext db, IConfiguration config, IEmailService emailService)
     {
         _db = db;
         _config = config;
+        _emailService = emailService;
     }
 
-    public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
+    public async Task<RegisterResponse> RegisterAsync(RegisterRequest request)
     {
         var normalizedEmail = request.Email.ToLowerInvariant().Trim();
 
@@ -38,6 +40,13 @@ public class AuthService : IAuthService
 
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password, workFactor: 12);
 
+        // Generate email verification token
+        var verificationTokenBytes = new byte[32];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(verificationTokenBytes);
+        var verificationToken = Convert.ToBase64String(verificationTokenBytes)
+            .Replace("+", "-").Replace("/", "_").TrimEnd('=');
+
         var user = new User
         {
             Email = normalizedEmail,
@@ -45,15 +54,27 @@ public class AuthService : IAuthService
             FullName = request.FullName.Trim(),
             Phone = request.Phone?.Trim(),
             Role = request.Role,
-            IsActive = true
+            IsActive = true,
+            IsEmailVerified = false,
+            EmailVerificationToken = verificationToken,
+            EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24)
         };
 
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
-        var (token, refreshToken, expiresAt) = GenerateTokens(user);
-        await SaveRefreshTokenAsync(user, refreshToken);
-        return new AuthResponse(token, refreshToken, expiresAt, MapToDto(user));
+        // Send verification email
+        try
+        {
+            await _emailService.SendEmailVerificationAsync(user.Email, user.FullName, verificationToken);
+        }
+        catch (Exception ex)
+        {
+            // Log error but don't fail registration
+            Console.WriteLine($"Failed to send verification email: {ex.Message}");
+        }
+
+        return new RegisterResponse(true, "Registration successful. Please check your email to verify your account.", user.Email);
     }
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request)
@@ -65,6 +86,10 @@ public class AuthService : IAuthService
 
         if (user is null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             throw new UnauthorizedAccessException("Invalid email or password.");
+
+        // Check if email is verified
+        if (!user.IsEmailVerified)
+            throw new UnauthorizedAccessException("Please verify your email before logging in. Check your inbox for the verification link.");
 
         var (token, refreshToken, expiresAt) = GenerateTokens(user);
         await SaveRefreshTokenAsync(user, refreshToken);
@@ -109,6 +134,16 @@ public class AuthService : IAuthService
         await _db.SaveChangesAsync();
 
         return MapToDto(user);
+    }
+
+    public async Task UpdateAvatarUrlAsync(Guid userId, string avatarUrl)
+    {
+        var user = await _db.Users.FindAsync(userId);
+        if (user is null) return;
+
+        user.AvatarUrl = avatarUrl;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
     }
 
     public async Task ForgotPasswordAsync(ForgotPasswordRequest request)
@@ -224,5 +259,63 @@ public class AuthService : IAuthService
         user.Phone,
         user.AvatarUrl,
         user.Role,
+        user.IsEmailVerified,
         user.CreatedAt);
+
+    public async Task VerifyEmailAsync(string token)
+    {
+        var user = await _db.Users
+            .FirstOrDefaultAsync(u =>
+                u.EmailVerificationToken == token &&
+                u.EmailVerificationTokenExpiry > DateTime.UtcNow);
+
+        if (user is null)
+            throw new UnauthorizedAccessException("Invalid or expired verification token.");
+
+        if (user.IsEmailVerified)
+            throw new InvalidOperationException("Email is already verified.");
+
+        user.IsEmailVerified = true;
+        user.EmailVerificationToken = null;
+        user.EmailVerificationTokenExpiry = null;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+    }
+
+    public async Task ResendVerificationEmailAsync(string email)
+    {
+        var normalizedEmail = email.ToLowerInvariant().Trim();
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+
+        if (user is null)
+            throw new InvalidOperationException("No account found with this email address.");
+
+        if (user.IsEmailVerified)
+            throw new InvalidOperationException("This email has already been verified.");
+
+        // Generate new verification token
+        var verificationTokenBytes = new byte[32];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(verificationTokenBytes);
+        var verificationToken = Convert.ToBase64String(verificationTokenBytes)
+            .Replace("+", "-").Replace("/", "_").TrimEnd('=');
+
+        user.EmailVerificationToken = verificationToken;
+        user.EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24);
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+
+        // Send verification email
+        try
+        {
+            await _emailService.SendEmailVerificationAsync(user.Email, user.FullName, verificationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to send verification email: {ex.Message}");
+            throw new InvalidOperationException("Failed to send verification email. Please try again later.");
+        }
+    }
 }

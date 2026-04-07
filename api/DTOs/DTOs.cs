@@ -27,6 +27,10 @@ public record ResetPasswordRequest(
     [Required][MinLength(6)] string NewPassword
 );
 
+public record ResendVerificationRequest(
+    [Required][EmailAddress] string Email
+);
+
 public record RefreshTokenRequest(
     [Required] string RefreshToken
 );
@@ -45,7 +49,14 @@ public record UserDto(
     string? Phone,
     string? AvatarUrl,
     string Role,
+    bool IsEmailVerified,
     DateTime CreatedAt
+);
+
+public record RegisterResponse(
+    bool EmailVerificationRequired,
+    string? Message,
+    string? Email
 );
 
 public record UpdateProfileRequest(
@@ -551,6 +562,7 @@ public record ApiResponse<T>(
     T? Data
 );
 
+
 public record PagedResult<T>(
     List<T> Items,
     int TotalCount,
@@ -596,4 +608,60 @@ public record UpdatePublicPricingCardRequest(
     bool? IsPopular,
     string? ThemeKey,
     bool? IsActive
+);
+
+// ============ StaticPage ============
+
+public record StaticPageDto(
+    Guid Id,
+    string Slug,
+    string Title,
+    string Content,
+    string Category,
+    string? MetaDescription,
+    string? CoverImageUrl,
+    bool IsPublished,
+    bool IsFeatured,
+    int SortOrder,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt,
+    string AuthorName
+);
+
+public record CreateStaticPageRequest(
+    [Required][MinLength(1)][MaxLength(100)] string Slug,
+    [Required][MinLength(1)][MaxLength(255)] string Title,
+    [Required] string Content,
+    [MaxLength(100)] string Category,
+    [MaxLength(500)] string? MetaDescription,
+    [MaxLength(255)] string? CoverImageUrl,
+    bool IsPublished,
+    bool IsFeatured,
+    int SortOrder
+);
+
+public record UpdateStaticPageRequest(
+    [MinLength(1)][MaxLength(100)] string? Slug,
+    [MinLength(1)][MaxLength(255)] string? Title,
+    string? Content,
+    [MaxLength(100)] string? Category,
+    [MaxLength(500)] string? MetaDescription,
+    [MaxLength(255)] string? CoverImageUrl,
+    bool? IsPublished,
+    bool? IsFeatured,
+    int? SortOrder
+);
+
+public record StaticPageListItemDto(
+    Guid Id,
+    string Slug,
+    string Title,
+    string Category,
+    string? MetaDescription,
+    bool IsPublished,
+    bool IsFeatured,
+    int SortOrder,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt,
+    string AuthorName
 );

@@ -5,13 +5,16 @@ namespace TutorApp.Api.Services.Interfaces;
 
 public interface IAuthService
 {
-    Task<AuthResponse> RegisterAsync(RegisterRequest request);
+    Task<RegisterResponse> RegisterAsync(RegisterRequest request);
     Task<AuthResponse> LoginAsync(LoginRequest request);
     Task<AuthResponse?> RefreshTokenAsync(string refreshToken);
     Task ForgotPasswordAsync(ForgotPasswordRequest request);
     Task ResetPasswordAsync(ResetPasswordRequest request);
     Task<UserDto?> GetUserByIdAsync(Guid userId);
     Task<UserDto?> UpdateProfileAsync(Guid userId, UpdateProfileRequest request);
+    Task UpdateAvatarUrlAsync(Guid userId, string avatarUrl);
+    Task VerifyEmailAsync(string token);
+    Task ResendVerificationEmailAsync(string email);
 }
 
 public interface ITutorService
@@ -99,4 +102,26 @@ public interface IPublicPricingService
     Task<List<PublicPricingCardDto>> GetAllCardsAsync(Guid adminId);
     Task<PublicPricingCardDto?> UpdateAsync(Guid cardId, Guid adminId, UpdatePublicPricingCardRequest request);
     Task<bool> DeleteAsync(Guid cardId, Guid adminId);
+}
+
+public interface IStaticPageService
+{
+    // Public — anyone can view published pages
+    Task<StaticPageDto?> GetBySlugAsync(string slug);
+    Task<List<StaticPageListItemDto>> GetPublishedByCategoryAsync(string category);
+    Task<List<StaticPageListItemDto>> GetAllPublishedAsync();
+    Task<List<StaticPageListItemDto>> GetFeaturedPagesAsync();
+
+    // Admin — full CRUD
+    Task<StaticPageDto> CreateAsync(Guid adminId, CreateStaticPageRequest request);
+    Task<List<StaticPageListItemDto>> GetAllPagesAsync();
+    Task<StaticPageDto?> GetByIdAsync(Guid pageId);
+    Task<StaticPageDto?> UpdateAsync(Guid pageId, Guid adminId, UpdateStaticPageRequest request);
+    Task<bool> DeleteAsync(Guid pageId, Guid adminId);
+}
+
+public interface IEmailService
+{
+    Task SendEmailAsync(string to, string subject, string htmlBody);
+    Task SendEmailVerificationAsync(string to, string fullName, string token);
 }

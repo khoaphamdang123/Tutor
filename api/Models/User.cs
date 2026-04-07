@@ -30,6 +30,15 @@ public class User
     [Column("is_active")]
     public bool IsActive { get; set; } = true;
 
+    [Column("is_email_verified")]
+    public bool IsEmailVerified { get; set; } = false;
+
+    [MaxLength(255), Column("email_verification_token")]
+    public string? EmailVerificationToken { get; set; }
+
+    [Column("email_verification_token_expiry")]
+    public DateTime? EmailVerificationTokenExpiry { get; set; }
+
     [MaxLength(500), Column("refresh_token_hash")]
     public string? RefreshTokenHash { get; set; }
 
